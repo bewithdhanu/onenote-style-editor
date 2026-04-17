@@ -1,0 +1,39 @@
+{
+  "name": "onenote-style-editor",
+  "version": "1.0.0",
+  "description": "A Microsoft OneNote-style free-form canvas editor library for the web",
+  "type": "module",
+  "main": "dist/onenote-editor.umd.js",
+  "module": "dist/onenote-editor.esm.js",
+  "exports": {
+    ".": {
+      "import": "./dist/onenote-editor.esm.js",
+      "require": "./dist/onenote-editor.umd.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "rollup -c rollup.config.js",
+    "dev": "rollup -c rollup.config.js --watch",
+    "demo": "npx serve . -p 3457"
+  },
+  "keywords": [
+    "editor",
+    "onenote",
+    "rich-text",
+    "canvas",
+    "wysiwyg",
+    "free-form"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "rollup": "^4.12.0",
+    "rollup-plugin-postcss": "^4.0.2"
+  }
+}

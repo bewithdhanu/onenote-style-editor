@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OneNote-Style Editor — Live Demo</title>
+  <meta name="description" content="Interactive demo of the onenote-style-editor JavaScript library. Click anywhere to type, drag blocks, and apply rich formatting." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent: #0078d4;
+      --accent-hover: #106ebe;
+      --bg-light: #f5f5f0;
+      --bg-dark: #1e1e2e;
+      --surface: rgba(255,255,255,0.9);
+      --text: #1a1a2e;
+      --border: rgba(0,0,0,0.08);
+      --radius: 12px;
+      --shadow: 0 4px 24px rgba(0,0,0,0.1);
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: #0f0f1a;
+      color: #e8e8f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ─── Header ─── */
+    header {
+      background: rgba(15,15,26,0.95);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-shrink: 0;
+      z-index: 1000;
+    }
+
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-logo svg {
+      width: 32px;
+      height: 32px;
+    }
+
+    .header-title {
+      font-size: 18px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #89b4fa, #cba6f7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header-badge {
+      font-size: 10px;
+      font-weight: 600;
+      background: rgba(137,180,250,0.15);
+      color: #89b4fa;
+      border: 1px solid rgba(137,180,250,0.3);
+      padding: 2px 8px;
+      border-radius: 20px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .header-spacer { flex: 1; }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: inherit;
+      text-decoration: none;
+    }
+
+    .btn--ghost {
+      background: rgba(255,255,255,0.06);
+      color: #cdd6f4;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .btn--ghost:hover {
+      background: rgba(255,255,255,0.12);
+      border-color: rgba(255,255,255,0.2);
+    }
+
+    .btn--primary {
+      background: linear-gradient(135deg, #0078d4, #106ebe);
+      color: #fff;
+      box-shadow: 0 2px 12px rgba(0,120,212,0.4);
+    }
+    .btn--primary:hover {
+      background: linear-gradient(135deg, #106ebe, #003f7d);
+      box-shadow: 0 4px 20px rgba(0,120,212,0.5);
+      transform: translateY(-1px);
+    }
+
+    .btn--danger {
+      background: rgba(231,76,60,0.15);
+      color: #e74c3c;
+      border: 1px solid rgba(231,76,60,0.3);
+    }
+    .btn--danger:hover {
+      background: rgba(231,76,60,0.25);
+    }
+
+    /* Dark mode toggle */
+    #dark-toggle {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      transition: background 0.15s ease;
+    }
+    #dark-toggle:hover { background: rgba(255,255,255,0.12); }
+
+    /* ─── Main layout ─── */
+    .layout {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      height: calc(100vh - 65px);
+    }
+
+    /* ─── Sidebar ─── */
+    .sidebar {
+      width: 240px;
+      flex-shrink: 0;
+      background: rgba(255,255,255,0.03);
+      border-right: 1px solid rgba(255,255,255,0.06);
+      padding: 20px 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .sidebar-section h3 {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: rgba(255,255,255,0.35);
+      margin-bottom: 10px;
+    }
+
+    .shortcut-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .shortcut-list li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: rgba(255,255,255,0.55);
+    }
+
+    kbd {
+      display: inline-block;
+      font-family: 'Courier New', monospace;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 6px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 4px;
+      color: #89b4fa;
+    }
+
+    .sidebar-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .sidebar-actions .btn {
+      justify-content: center;
+      width: 100%;
+    }
+
+    /* Stats */
+    .stats {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .stat {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: rgba(255,255,255,0.45);
+    }
+
+    .stat span:last-child {
+      font-weight: 600;
+      color: #89b4fa;
+    }
+
+    /* ─── Canvas container ─── */
+    .canvas-container {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    #editor {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Override canvas background for demo (dark bg) */
+    #editor .one-canvas {
+      background-color: #1a1a2e;
+      background-image: radial-gradient(circle, #2a2a4a 1px, transparent 1px);
+    }
+
+    /* ─── JSON Modal ─── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(8px);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal {
+      background: #1e1e2e;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      width: 90%;
+      max-width: 640px;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+      transform: scale(0.95);
+      transition: transform 0.2s ease;
+    }
+
+    .modal-overlay.open .modal {
+      transform: scale(1);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .modal-header h2 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #cdd6f4;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.5);
+      cursor: pointer;
+      font-size: 20px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      transition: background 0.1s ease;
+    }
+    .modal-close:hover { background: rgba(255,255,255,0.08); color: #fff; }
+
+    .modal-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 24px;
+    }
+
+    .modal-body textarea {
+      width: 100%;
+      height: 300px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px;
+      color: #a6e3a1;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      padding: 12px;
+      resize: vertical;
+      outline: none;
+    }
+
+    .modal-footer {
+      padding: 12px 24px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    /* ─── Toast notifications ─── */
+    #toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 99999;
+      display: flex;
+      flex-direction: column-reverse;
+      gap: 8px;
+    }
+
+    .toast {
+      background: rgba(30,30,46,0.95);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #cdd6f4;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      animation: slideIn 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-logo">
+    <!-- Simple OneNote-like icon SVG -->
+    <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="32" height="32" rx="6" fill="url(#grad1)"/>
+      <defs>
+        <linearGradient id="grad1" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#7c3aed"/>
+          <stop offset="100%" stop-color="#0078d4"/>
+        </linearGradient>
+      </defs>
+      <rect x="6" y="8" width="14" height="2" rx="1" fill="white" opacity="0.9"/>
+      <rect x="6" y="13" width="10" height="2" rx="1" fill="white" opacity="0.7"/>
+      <rect x="6" y="18" width="12" height="2" rx="1" fill="white" opacity="0.7"/>
+      <rect x="6" y="23" width="8" height="2" rx="1" fill="white" opacity="0.5"/>
+      <circle cx="24" cy="23" r="5" fill="white" opacity="0.15"/>
+      <path d="M22 23 L24 25 L27 21" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span class="header-title">OneNote Editor</span>
+    <span class="header-badge">v1.0</span>
+  </div>
+
+  <div class="header-spacer"></div>
+
+  <div class="header-actions">
+    <button class="btn btn--ghost" id="undo-btn" title="Undo (Ctrl+Z)" disabled>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
+      Undo
+    </button>
+    <button class="btn btn--ghost" id="redo-btn" title="Redo (Ctrl+Y)" disabled>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13"/></svg>
+      Redo
+    </button>
+    <button class="btn btn--ghost" id="export-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Export
+    </button>
+    <button class="btn btn--ghost" id="import-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Import
+    </button>
+    <button class="btn btn--primary" id="add-block-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add Block
+    </button>
+    <button class="btn btn--ghost" id="dark-toggle" title="Toggle theme">
+      <svg id="theme-icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg id="theme-icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <h3>Quick Start</h3>
+      <ul class="shortcut-list">
+        <li><span>Create block</span> <kbd>Dbl-click</kbd></li>
+        <li><span>Move block</span> <kbd>Drag handle</kbd></li>
+        <li><span>Resize block</span> <kbd>⤡ corner</kbd></li>
+        <li><span>Deselect</span> <kbd>Esc</kbd></li>
+        <li><span>Delete block</span> <kbd>✕ button</kbd></li>
+        <li><span>Duplicate</span> <kbd>⧉ button</kbd></li>
+        <li><span>Undo</span> <kbd>Ctrl+Z</kbd></li>
+        <li><span>Redo</span> <kbd>Ctrl+Shift+Z</kbd></li>
+      </ul>
+    </div>
+
+    <div class="sidebar-section">
+      <h3>Multi-Select</h3>
+      <ul class="shortcut-list">
+        <li><span>Select area</span> <kbd>Drag canvas</kbd></li>
+        <li><span>Add to select</span> <kbd>Ctrl+Click</kbd></li>
+        <li><span>Select all</span> <kbd>Ctrl+A</kbd></li>
+        <li><span>Copy</span> <kbd>Ctrl+C</kbd></li>
+        <li><span>Cut</span> <kbd>Ctrl+X</kbd></li>
+        <li><span>Paste</span> <kbd>Ctrl+V</kbd></li>
+        <li><span>Duplicate</span> <kbd>Ctrl+D</kbd></li>
+        <li><span>Delete</span> <kbd>Del</kbd></li>
+        <li><span>Deselect</span> <kbd>Esc</kbd></li>
+      </ul>
+    </div>
+
+    <div class="sidebar-section">
+      <h3>Formatting</h3>
+      <ul class="shortcut-list">
+        <li><span>Bold</span> <kbd>Ctrl+B</kbd></li>
+        <li><span>Italic</span> <kbd>Ctrl+I</kbd></li>
+        <li><span>Underline</span> <kbd>Ctrl+U</kbd></li>
+        <li><span>Select text</span> <span style="color:#89b4fa;font-size:11px">→ toolbar</span></li>
+      </ul>
+    </div>
+
+    <div class="sidebar-section">
+      <h3>Actions</h3>
+      <div class="sidebar-actions">
+        <button class="btn btn--ghost" id="clear-canvas-btn">🗑 Clear all blocks</button>
+        <button class="btn btn--ghost" id="load-sample-btn">📋 Load sample</button>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <h3>Stats</h3>
+      <div class="stats">
+        <div class="stat"><span>Blocks</span><span id="stat-blocks">0</span></div>
+        <div class="stat"><span>Selected</span><span id="stat-selected">0</span></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Editor Canvas -->
+  <div class="canvas-container">
+    <div id="editor"></div>
+  </div>
+</div>
+
+<!-- JSON Modal -->
+<div class="modal-overlay" id="json-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-title">Export JSON</h2>
+      <button class="modal-close" id="modal-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <textarea id="json-textarea" spellcheck="false"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn--ghost" id="modal-close-btn">Cancel</button>
+      <button class="btn btn--primary" id="modal-confirm-btn">Copy / Apply</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<!-- Load the UMD bundle from dist -->
+<script src="../dist/onenote-editor.umd.js"></script>
+<script src="demo.js"></script>
+</body>
+</html>
