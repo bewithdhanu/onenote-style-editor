@@ -5,8 +5,14 @@ export default {
   input: 'src/index.js',
   output: [
     {
-      file: 'dist/onenote-editor.esm.js',
+      file: 'dist/index.js',
       format: 'esm',
+      exports: 'named',
+      sourcemap: true,
+    },
+    {
+      file: 'dist/index.cjs',
+      format: 'cjs',
       exports: 'named',
       sourcemap: true,
     },

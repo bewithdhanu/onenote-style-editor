@@ -10,6 +10,7 @@ export class Canvas extends EventEmitter {
   constructor(containerEl, { dark = 'auto', showHint = true } = {}) {
     super();
     this.containerEl = containerEl;
+    this.containerEl.classList.add('one-editor');
     this.containerEl.style.display = 'flex';
     this.containerEl.style.flexDirection = 'column';
     this.containerEl.style.height = '100vh';
@@ -53,6 +54,9 @@ export class Canvas extends EventEmitter {
     this._bindEvents();
     this._watchSelectionChange();
 
+    this.containerEl.classList.toggle('one-editor--dark', this.dark);
+    // Ensure host page styles don't leak into the editor background
+    this.containerEl.style.backgroundColor = this.dark ? '#1e1e2e' : '#f5f5f0';
     if (showHint) this._showHint();
   }
 
@@ -610,6 +614,8 @@ export class Canvas extends EventEmitter {
   setDark(dark) {
     this.dark = dark;
     this.el.classList.toggle('one-canvas--dark', dark);
+    this.containerEl.classList.toggle('one-editor--dark', dark);
+    this.containerEl.style.backgroundColor = dark ? '#1e1e2e' : '#f5f5f0';
     if (this._toolbar) this._toolbar.setDark(dark);
   }
 

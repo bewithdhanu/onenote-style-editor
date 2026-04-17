@@ -1,14 +1,16 @@
 {
   "name": "onenote-style-editor",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A Microsoft OneNote-style free-form canvas editor library for the web",
   "type": "module",
-  "main": "dist/onenote-editor.umd.js",
-  "module": "dist/onenote-editor.esm.js",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "unpkg": "./dist/onenote-editor.umd.js",
+  "jsdelivr": "./dist/onenote-editor.umd.js",
   "exports": {
     ".": {
-      "import": "./dist/onenote-editor.esm.js",
-      "require": "./dist/onenote-editor.umd.js"
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
     }
   },
   "files": [
@@ -17,7 +19,8 @@
     "README.md"
   ],
   "scripts": {
-    "build": "rollup -c rollup.config.js",
+    "build": "node -e \"import('node:fs').then(fs=>fs.rmSync('dist',{recursive:true,force:true}))\" && rollup -c rollup.config.js",
+    "prepack": "npm run build",
     "dev": "rollup -c rollup.config.js --watch",
     "demo": "npx serve . -p 3457"
   },
@@ -29,8 +32,20 @@
     "wysiwyg",
     "free-form"
   ],
-  "author": "",
+  "author": "bewithdhanu",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bewithdhanu/onenote-style-editor.git"
+  },
+  "bugs": {
+    "url": "https://github.com/bewithdhanu/onenote-style-editor/issues"
+  },
+  "homepage": "https://github.com/bewithdhanu/onenote-style-editor#readme",
+  "sideEffects": true,
+  "publishConfig": {
+    "access": "public"
+  },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^15.2.3",
     "rollup": "^4.12.0",
